@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نقشه قلعه‌ها</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="css/styles.css">
+
+</head>
+<body>
+  <canvas id="mapCanvas"></canvas>
+  <svg id="castleLayer" width="100%" height="100%"></svg>
+
+  <script>
+    const canvas = document.getElementById("mapCanvas");
+    const svgLayer = document.getElementById("castleLayer");
+    const ctx = canvas.getContext("2d");
+  
+    const mapSvg = new Image();
+    mapSvg.src = 'svg/map.svg'; // آدرس نقشه SVG خود را اینجا قرار دهید
+  
+    let castles = []; // قلعه‌ها از JSON
+    let offsetX = 0, offsetY = 0;
+    let scale = 0.1;
+    let capturedStatus = {}; // وضعیت انیمیشن برای قلعه‌ها
+    let alreadyCaptured = {}; // وضعیت قلعه‌های فتح شده برای جلوگیری از تکرار انیمیشن
+  
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  
+    // لود اطلاعات قلعه‌ها از فایل JSON
+    function loadCastles() {
+      fetch('castles.json?' + new Date().getTime()) // اضافه کردن پارامتر تصادفی به URL
+        .then(res => res.json())
+        .then(data => {
+          castles = data;
+          capturedStatus = {}; // ریست کردن وضعیت‌های قبلی
+          console.log("قلعه‌ها: ", castles); // بررسی داده‌های JSON در کنسول
+          drawMap();
+          drawCastles();
+        })
+        .catch(error => console.error("خطا در لود داده‌ها: ", error));
+    }
+  
+    mapSvg.onload = () => {
+      drawMap();
+      drawCastles();
+      console.log("نقشه لود شد", mapSvg.width, mapSvg.height);
+    };
+  
+    // رسم نقشه اصلی
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+      ctx.drawImage(mapSvg, 0, 0);
+    }
+  
+    // رسم قلعه‌ها
+    function drawCastles() {
+      svgLayer.innerHTML = ''; // پاک کردن قلعه‌های قبلی
+  
+      const compressionFactor = 0.63; // ضریب فشرده‌سازی — هر چی کمتر، فاصله‌ها کمتر
+  
+      castles.forEach(castle => {
+        const x = castle.X * compressionFactor * scale + offsetX;
+        const y = castle.Y * compressionFactor * scale + offsetY;
+  
+        // تصویر قلعه قبل از فتح
+        const castleIcon = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        castleIcon.setAttributeNS(null, 'href', capturedStatus[castle.Name] ? 'svg/captured-castle.svg' : 'svg/castle.svg'); // بررسی وضعیت فتح
+        castleIcon.setAttributeNS(null, 'x', x - 16); // نصف آیکون برای مرکز کردن
+        castleIcon.setAttributeNS(null, 'y', y - 16);
+        castleIcon.setAttributeNS(null, 'width', 32);
+        castleIcon.setAttributeNS(null, 'height', 32);
+        castleIcon.setAttributeNS(null, 'title', castle.Name);
+  
+        svgLayer.appendChild(castleIcon);
+  
+        // اضافه کردن نام قلعه زیر تصویر آن
+        const castleName = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        castleName.setAttributeNS(null, 'x', x);
+        castleName.setAttributeNS(null, 'y', y + 25); // قرار دادن متن زیر تصویر قلعه
+        castleName.setAttributeNS(null, 'text-anchor', 'middle');
+        castleName.setAttributeNS(null, 'font-size', '12');
+        castleName.setAttributeNS(null, 'fill', '#000'); // رنگ متن سیاه
+        castleName.setAttributeNS(null, 'fill', '#e9dcc4'); // رنگ سفید برای متن
+    castleName.setAttributeNS(null, 'font-family', 'IranYekan'); // فونت (می‌توانید این را تغییر دهید)
+    castleName.textContent = castle.Name;
+  
+        svgLayer.appendChild(castleName);
+  
+        // فقط به قلعه‌های فتح‌شده انیمیشن می‌دهیم
+        if (castle.isCaptured && !capturedStatus[castle.Name]) {
+          capturedStatus[castle.Name] = true; // ثبت وضعیت فتح
+          castleIcon.classList.add('animate__animated', 'animate__fadeOut');
+          castleIcon.addEventListener('animationend', () => {
+            // بعد از اتمام انیمیشن fadeOut، تغییر تصویر به قلعه فتح‌شده
+            castleIcon.setAttributeNS(null, 'href', 'captured-castle.svg'); // تغییر به قلعه فتح‌شده
+            // انیمیشن fadeIn به قلعه جدید اضافه می‌کنیم
+            castleIcon.classList.remove('animate__fadeOut'); // حذف کلاس fadeOut
+            castleIcon.classList.add('animate__fadeIn'); // اضافه کردن fadeIn
+  
+            // اگر لازم بود، پس از پایان انیمیشن fadeIn کاری انجام دهید
+            castleIcon.addEventListener('animationend', () => {
+              castleIcon.classList.remove('animate__fadeIn'); // حذف انیمیشن پس از پایان
+            });
+          });
+        }
+      });
+    }
+  
+    // بروزرسانی نقشه و قلعه‌ها
+    function updateView() {
+      drawMap();
+      drawCastles();
+    }
+  
+    // محدود کردن حرکت نقشه
+    function clampOffsets() {
+      const maxOffsetX = -(mapSvg.width * scale - canvas.width);
+      const maxOffsetY = -(mapSvg.height * scale - canvas.height);
+      offsetX = Math.min(0, Math.max(offsetX, maxOffsetX));
+      offsetY = Math.min(0, Math.max(offsetY, maxOffsetY));
+    }
+  
+    // جابجایی با موس
+    let isDragging = false, lastX = 0, lastY = 0;
+  
+    canvas.addEventListener("mousedown", e => {
+      isDragging = true;
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+    });
+  
+    canvas.addEventListener("mousemove", e => {
+      if (!isDragging) return;
+  
+      const deltaX = e.offsetX - lastX;
+      const deltaY = e.offsetY - lastY;
+  
+      offsetX += deltaX / scale;
+      offsetY += deltaY / scale;
+  
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+  
+      clampOffsets();
+      updateView();
+    });
+  
+    canvas.addEventListener("mouseup", () => isDragging = false);
+    canvas.addEventListener("mouseleave", () => isDragging = false);
+  
+    // زوم با موس
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const scaleFactor = 1.1;
+      const mouseX = e.offsetX;
+      const mouseY = e.offsetY;
+  
+      const worldX = (mouseX - offsetX * scale) / scale;
+      const worldY = (mouseY - offsetY * scale) / scale;
+  
+      scale = e.deltaY < 0 ? scale * scaleFactor : scale / scaleFactor;
+      scale = Math.min(2, Math.max(0.05, scale));
+  
+      offsetX = -(worldX * scale - mouseX) / scale;
+      offsetY = -(worldY * scale - mouseY) / scale;
+  
+      clampOffsets();
+      updateView();
+    });
+  
+    // فراخوانی لود داده‌ها
+    loadCastles();
+  </script>
+  
+  
+</body>
+</html>

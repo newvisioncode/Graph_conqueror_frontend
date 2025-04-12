@@ -1,0 +1,28 @@
+@font-face {
+font-family: "IranYekan";
+src: url("fonts/eot/iranyekanwebregular.eot"),
+    url("fonts/ttf/iranyekanwebregular.ttf") format('truetype'),
+    url("fonts/woff/iranyekanwebregular.woff") format('woff');
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  cursor: grab;
+}
+
+canvas {
+  display: block;
+  background-color: transparent;
+  width: 100vw;
+  height: 100vh;
+}
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
