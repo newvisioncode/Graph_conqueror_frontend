@@ -18,12 +18,12 @@
     const ctx = canvas.getContext("2d");
   
     const mapSvg = new Image();
-    mapSvg.src = 'svg/map.svg'; // آدرس نقشه SVG خود را اینجا قرار دهید
+    mapSvg.src = 'svg/map.svg';
   
     let castles = []; // قلعه‌ها از JSON
     let offsetX = 0, offsetY = 0;
     let scale = 0.1;
-    let capturedStatus = {}; // وضعیت انیمیشن برای قلعه‌ها
+    let capturedStatus = {}; 
     let alreadyCaptured = {}; // وضعیت قلعه‌های فتح شده برای جلوگیری از تکرار انیمیشن
   
     canvas.width = window.innerWidth;
@@ -31,12 +31,12 @@
   
     // لود اطلاعات قلعه‌ها از فایل JSON
     function loadCastles() {
-      fetch('castles.json?' + new Date().getTime()) // اضافه کردن پارامتر تصادفی به URL
+      fetch('castles.json?' + new Date().getTime())
         .then(res => res.json())
         .then(data => {
           castles = data;
-          capturedStatus = {}; // ریست کردن وضعیت‌های قبلی
-          console.log("قلعه‌ها: ", castles); // بررسی داده‌های JSON در کنسول
+          capturedStatus = {}; 
+          console.log("قلعه‌ها: ", castles); 
           drawMap();
           drawCastles();
         })
@@ -58,9 +58,9 @@
   
     // رسم قلعه‌ها
     function drawCastles() {
-      svgLayer.innerHTML = ''; // پاک کردن قلعه‌های قبلی
+      svgLayer.innerHTML = ''; 
   
-      const compressionFactor = 0.63; // ضریب فشرده‌سازی — هر چی کمتر، فاصله‌ها کمتر
+      const compressionFactor = 0.63;
   
       castles.forEach(castle => {
         const x = castle.X * compressionFactor * scale + offsetX;
@@ -69,7 +69,7 @@
         // تصویر قلعه قبل از فتح
         const castleIcon = document.createElementNS("http://www.w3.org/2000/svg", "image");
         castleIcon.setAttributeNS(null, 'href', capturedStatus[castle.Name] ? 'svg/captured-castle.svg' : 'svg/castle.svg'); // بررسی وضعیت فتح
-        castleIcon.setAttributeNS(null, 'x', x - 16); // نصف آیکون برای مرکز کردن
+        castleIcon.setAttributeNS(null, 'x', x - 16); 
         castleIcon.setAttributeNS(null, 'y', y - 16);
         castleIcon.setAttributeNS(null, 'width', 32);
         castleIcon.setAttributeNS(null, 'height', 32);
@@ -80,12 +80,12 @@
         // اضافه کردن نام قلعه زیر تصویر آن
         const castleName = document.createElementNS("http://www.w3.org/2000/svg", "text");
         castleName.setAttributeNS(null, 'x', x);
-        castleName.setAttributeNS(null, 'y', y + 25); // قرار دادن متن زیر تصویر قلعه
+        castleName.setAttributeNS(null, 'y', y + 25); 
         castleName.setAttributeNS(null, 'text-anchor', 'middle');
         castleName.setAttributeNS(null, 'font-size', '12');
-        castleName.setAttributeNS(null, 'fill', '#000'); // رنگ متن سیاه
-        castleName.setAttributeNS(null, 'fill', '#e9dcc4'); // رنگ سفید برای متن
-    castleName.setAttributeNS(null, 'font-family', 'IranYekan'); // فونت (می‌توانید این را تغییر دهید)
+        castleName.setAttributeNS(null, 'fill', '#000'); 
+        castleName.setAttributeNS(null, 'fill', '#e9dcc4'); 
+    castleName.setAttributeNS(null, 'font-family', 'IranYekan'); 
     castleName.textContent = castle.Name;
   
         svgLayer.appendChild(castleName);
@@ -95,15 +95,12 @@
           capturedStatus[castle.Name] = true; // ثبت وضعیت فتح
           castleIcon.classList.add('animate__animated', 'animate__fadeOut');
           castleIcon.addEventListener('animationend', () => {
-            // بعد از اتمام انیمیشن fadeOut، تغییر تصویر به قلعه فتح‌شده
             castleIcon.setAttributeNS(null, 'href', 'captured-castle.svg'); // تغییر به قلعه فتح‌شده
-            // انیمیشن fadeIn به قلعه جدید اضافه می‌کنیم
-            castleIcon.classList.remove('animate__fadeOut'); // حذف کلاس fadeOut
-            castleIcon.classList.add('animate__fadeIn'); // اضافه کردن fadeIn
+            castleIcon.classList.remove('animate__fadeOut'); 
+            castleIcon.classList.add('animate__fadeIn'); 
   
-            // اگر لازم بود، پس از پایان انیمیشن fadeIn کاری انجام دهید
             castleIcon.addEventListener('animationend', () => {
-              castleIcon.classList.remove('animate__fadeIn'); // حذف انیمیشن پس از پایان
+              castleIcon.classList.remove('animate__fadeIn'); 
             });
           });
         }
@@ -172,7 +169,6 @@
       updateView();
     });
   
-    // فراخوانی لود داده‌ها
     loadCastles();
   </script>
   
